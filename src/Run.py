@@ -19,7 +19,7 @@ logging.info('Started Logging Successfully.')
 
 capturedPackets = []
 aggregationWindowTime = 5
-model = joblib.load('GradientBoostingFile.pkl')
+model = load('GradientBoostingFile.pkl')
 
 
 def SavePacket(packet):
