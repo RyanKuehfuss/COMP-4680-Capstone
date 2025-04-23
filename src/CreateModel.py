@@ -27,7 +27,7 @@ print('Finished Processing CSV File')
 
 
 columnsToEncode = [1, 2, 3]
-encoder = OneHotEncoder(handle_unknown='ignore')
+encoder = OneHotEncoder(handle_unknown='ignore',sparse_output=False)
 preprocessor = ColumnTransformer(transformers=[('cat', encoder, columnsToEncode)])
 
 
