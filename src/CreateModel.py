@@ -12,7 +12,7 @@ def ProcessCSVFile(csvFile):
 
     df = pd.read_csv(csvFile)
 
-    X = df.iloc[:, :-1]
+    X = df.iloc[:, :-1].values
     y = df.iloc[:, -1].values
 
     return X, y
@@ -26,7 +26,7 @@ X, y = ProcessCSVFile(csvFile)
 print('Finished Processing CSV File')
 
 
-columnsToEncode = X.select_dtypes(include=['object']).columns.tolist()
+columnsToEncode = [1, 2, 3]
 encoder = OneHotEncoder(handle_unknown='ignore')
 preprocessor = ColumnTransformer(transformers=[('cat', encoder, columnsToEncode)])
 
