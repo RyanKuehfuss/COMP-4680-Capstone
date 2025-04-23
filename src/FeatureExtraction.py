@@ -1,7 +1,7 @@
 from scapy.all import get_if_addr
 from scapy.layers.inet import IP, TCP, UDP, ICMP
 from scapy.packet import Packet
-from services import services
+from Services import services, types
 
 # NEED TO MAKE THIS CHANGE WITH THE SNIFFER
 myIp = get_if_addr("eth0")
@@ -25,6 +25,9 @@ def GetService(packet: Packet)-> str:
     elif packet.haslayer(UDP):
         port = packet[UDP].dport
         return services.get(port, 'other')
+    elif packet.haslayer(ICMP):
+        type = (packet[ICMP].type, packet[ICMP].code)
+        return types.get(type, 'other')
     return 'other'
 
 
