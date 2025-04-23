@@ -12,7 +12,7 @@ def ProcessCSVFile(csvFile):
 
     df = pd.read_csv(csvFile)
 
-    X = df.iloc[:, :-1].values
+    X = df.iloc[:, :-1]
     y = df.iloc[:, -1].values
 
     return X, y
