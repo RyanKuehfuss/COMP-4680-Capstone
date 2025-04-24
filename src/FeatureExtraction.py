@@ -4,7 +4,7 @@ from scapy.packet import Packet
 from Services import services, types
 
 # NEED TO MAKE THIS CHANGE WITH THE SNIFFER
-myIp = get_if_addr("eth0")
+myIp = get_if_addr('eth0')
 
 
 def GetProtocol(packet: Packet)-> str:
@@ -108,14 +108,49 @@ def IsLandAttack(packets: list)-> int:
     return 0
 
 
+def ReassembleFragments(packets: list)-> list:
+    ipFragments = {}
+    reassembledPackets = []
+
+    for packetSet in packets:
+        packet = packetSet[0]
+        if IP in packet and packet[IP].flags & 1 or packet[IP].frag != 0:
+            ident = (packet[IP].src, packet[IP].dst, packet[IP].id, packet[IP].proto)
+            ipFragments.setdefault(ident, []).append(packet)
+        else:
+            reassembledPackets.append((packet, packetSet[1]))
+
+    for fragmentGroup in ipFragments.values():
+        base = AssembleFragment(fragmentGroup)
+        fullPacket = IP(bytes(base[0]))
+        reassembledPackets.append((fullPacket,base[1]))
+
+    return reassembledPackets
+
+
+def AssembleFragment(fragments: list)-> tuple:
+    fragments.sort(key=lambda packet: packet[IP].frag)
+    timeStamp = max(frag.time for frag in fragments)
+    assembledPacket = fragments[0][IP]
+
+    payload = b''
+    for fragment in fragments:
+        ip = fragment[IP]
+        offset = ip.frag * 8
+        data = bytes(ip.payload)
+        payload = payload[:offset] + data + payload[offset + len(data):]
+
+    assembledPacket.flags = 0
+    assembledPacket.frag = 0
+    assembledPacket.len = len(assembledPacket) + len(payload)
+    assembledPacket.payload = Raw(payload)
+
+    return (assembledPacket, timeStamp)
+
+
 def GroupPackets(packets : list)-> dict:
     connections = {}
-
-    #print("in group: ", len(packets))
-
-    packets = reassemble_fragments(packets)
-
-    #print("in group: ", len(packets))
+    packets = ReassembleFragments(packets)
 
     for packetSet in packets:
         packet = packetSet[0]
@@ -125,21 +160,17 @@ def GroupPackets(packets : list)-> dict:
         if(packet.haslayer(IP)):
             ipPair = tuple(sorted([packet[IP].src, packet[IP].dst]))
             if packet.haslayer(TCP):
-                #print("hereTCP")
                 portPair = tuple(sorted([packet[TCP].sport, packet[TCP].dport]))
                 connectionKey = ipPair + portPair + (packet[IP].proto,)
             elif packet.haslayer(UDP):
-                print("hereUDP")
                 portPair = tuple(sorted([packet[UDP].sport, packet[UDP].dport]))
                 connectionKey = ipPair + portPair + (packet[IP].proto,)
             elif packet.haslayer(ICMP):
-                print("hereICMP")
                 connectionKey = ipPair + (packet[IP].proto,)
             else:
                 connectionKey = 'null'
 
             if connectionKey not in connections:
-                #print("hereCONN")
                 connections[connectionKey] = {
                     'packets': [],
                     'sessionStart': packetTime,
@@ -147,9 +178,8 @@ def GroupPackets(packets : list)-> dict:
                 }
             connections[connectionKey]['packets'].append(packet)
             connections[connectionKey]['sessionDuration'] = packetTime - connections[connectionKey]['sessionStart']
-
         else:
-            print("packet doesnt have ip?")
+            print('packet doesnt have ip?')
 
     return connections
 
@@ -158,94 +188,40 @@ def ExtractFeatures(connections : dict)-> dict:
     features = {}
     for connection, stats in connections.items():
         if connection != 'null':
-            #print("null here")
-            #try:
-            packets = stats['packets']
-            if packets:
-                #print("in packets")
-                if connection not in features:
-                    features[connection]={}
+            try:
+                packets = stats['packets']
+                if packets:
+                    if connection not in features:
+                        features[connection] = {}
 
-                # Session Duration
-                features[connection]['duration'] = stats['sessionDuration']
+                    # Session Duration
+                    features[connection]['duration'] = stats['sessionDuration']
 
-                # Get Packet Protocol
-                features[connection]['protocol_type'] = GetProtocol(packets[0])
+                    # Get Packet Protocol
+                    features[connection]['protocol_type'] = GetProtocol(packets[0])
 
-                # Get packets service
-                features[connection]['service'] = GetService(packets[-1])
+                    # Get packets service
+                    features[connection]['service'] = GetService(packets[-1])
 
-                # Get packets flags
-                features[connection]['flag'] = GetFlag(packets)
+                    # Get packets flags
+                    features[connection]['flag'] = GetFlag(packets)
 
-                # Get packets src bytes
-                features[connection]['src_bytes'] = GetSRCBytes(packets)
+                    # Get packets src bytes
+                    features[connection]['src_bytes'] = GetSRCBytes(packets)
 
-                # Get packets dst bytes
-                features[connection]['dst_bytes'] = GetDSTBytes(packets)
+                    # Get packets dst bytes
+                    features[connection]['dst_bytes'] = GetDSTBytes(packets)
 
-                # Get if land attack
-                features[connection]['land'] = IsLandAttack(packets)
-
-            #except Exception as e:
-                #print(f'Error processing session: {e}')
+                    # Get if land attack
+                    features[connection]['land'] = IsLandAttack(packets)
+            except Exception as e:
+                print(f'Error processing session: {e}')
     return features
 
 
 def AggregateFeatures(packets : list)-> dict:
-    
-    #print("in agg: ", len(packets))
     connections = GroupPackets(packets)
 
-    #print(connections)
-
     if connections:
-        #print("entering extraction")
         return ExtractFeatures(connections)
     return None
-
-def reassemble_fragments(packets):
-    ip_fragments = {}
-    reassembled = []
-
-    for packetset in packets:
-        pkt = packetset[0]
-        if IP in pkt and pkt[IP].flags & 1 or pkt[IP].frag != 0:
-            # Fragmented packet
-            ident = (pkt[IP].src, pkt[IP].dst, pkt[IP].id, pkt[IP].proto)
-            ip_fragments.setdefault(ident, []).append(pkt)
-        else:
-            # Not fragmented
-            reassembled.append((pkt,packetset[1]))
-
-    for frag_group in ip_fragments.values():
-        base = assemble_fragment(frag_group)
-        full_pkt = IP(bytes(base[0]))
-        reassembled.append((full_pkt,base[1]))
-
-    return reassembled
-
-def assemble_fragment(fragments):
-    # Sort fragments by fragment offset
-    fragments.sort(key=lambda p: p[IP].frag)
-
-    ts = max(frag.time for frag in fragments)
-
-    # Take the first fragment as base
-    base = fragments[0][IP]
-
-    # Reassemble payload
-    payload = b''
-    for frag in fragments:
-        ip = frag[IP]
-        offset = ip.frag * 8
-        data = bytes(ip.payload)
-        payload = payload[:offset] + data + payload[offset + len(data):]
-
-    # Remove fragmentation flags and offset
-    base.flags = 0
-    base.frag = 0
-    base.len = len(base) + len(payload)  # update total length
-    base.payload = Raw(payload)
-
-    return (base,ts)
