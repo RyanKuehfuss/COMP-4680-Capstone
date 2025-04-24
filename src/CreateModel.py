@@ -18,7 +18,7 @@ def ProcessCSVFile(csvFile):
     return X, y
 
 
-csvFile = "trimmed_train.csv"
+csvFile = 'trimmed_train.csv'
 
 
 print('Processing CSV File...')
