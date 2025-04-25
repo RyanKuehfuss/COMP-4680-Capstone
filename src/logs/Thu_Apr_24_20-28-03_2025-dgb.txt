@@ -1,2 +1,0 @@
-INFO: Started Logging Successfully.
-INFO: A Suspicious connection has been found: ('172.25.237.199', '192.168.0.201', 1) | PACKET INFORMATION : {'duration': 0.0, 'protocol_type': 'icmp', 'service': 'ecr_i', 'flag': 'SF', 'src_bytes': 520, 'dst_bytes': 0, 'land': 0}
