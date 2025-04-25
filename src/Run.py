@@ -35,9 +35,6 @@ def SavePacket(packet : Packet):
 
 def CapturePackets():
     print('Capturing packets...')
-    # Sniffer for packets need to make eth0 environment variable
-    # or something like that if we want this to be easily modular
-    # to other systems
     sniff(prn=SavePacket, store=0, timeout=aggregationWindowTime, iface='eth0')
     
 
@@ -47,24 +44,16 @@ def ClassifyTraffic(features : dict):
         for _, value in innerDict.items():
             featureList.append(value)
 
-        #print([featureList])
         prediction = model.predict([featureList])
 
-        print(prediction)
-
         if prediction == 1:
-            print('Found Anomaly')
             logging.info(f'A Suspicious connection has been found: {connection} | PACKET INFORMATION : {features[connection]}')
-        else:
-             print('Found Normal')
 
 
 while True:
     CapturePackets()
 
     features = AggregateFeatures(capturedPackets)
-
-    #print(len(capturedPackets))
 
     if features:
         ClassifyTraffic(features)
