@@ -3,7 +3,6 @@ from scapy.layers.inet import IP, TCP, UDP, ICMP
 from scapy.packet import Packet
 from Services import services, types
 
-# NEED TO MAKE THIS CHANGE WITH THE SNIFFER
 myIp = get_if_addr('eth0')
 
 
@@ -45,7 +44,6 @@ def GetFlag(packets: list)-> str:
                 return 'RSTR'
             elif packet[TCP].seq == 0:
                 return 'RSTOS0'
-            # NEED TO DO THIS FLAG IN THE RUN TEST FILE
             elif packet[IP].src != myIp:
                 return 'RSTO'
             return 'REJ'
@@ -86,7 +84,6 @@ def GetSRCBytes(packets: list)-> int:
     srcBytes = 0
     for packet in packets:
         if packet.haslayer(IP):
-            print(packet[IP].payload)
             if packet[IP].dst == myIp:
                 if packet.haslayer(Raw):
                     srcBytes += len(packet[Raw].load)
@@ -155,8 +152,6 @@ def GroupPackets(packets : list)-> dict:
     connections = {}
     packets = ReassembleFragments(packets)
 
-    #print(len(packets))
-
     for packetSet in packets:
         packet = packetSet[0]
         packetTime = packetSet[1]
@@ -183,10 +178,8 @@ def GroupPackets(packets : list)-> dict:
                 }
             connections[connectionKey]['packets'].append(packet)
             connections[connectionKey]['sessionDuration'] = packetTime - connections[connectionKey]['sessionStart']
-            #print(connections[connectionKey]["sessionDuration"])
         else:
-            print('packet doesnt have ip?')
-
+            print('Packet doesn\'t have an IP layer.')
     return connections
 
 
@@ -220,9 +213,6 @@ def ExtractFeatures(connections : dict)-> dict:
 
                     # Get if land attack
                     features[connection]['land'] = IsLandAttack(packets)
-
-                    print(features[connection])
-
             except Exception as e:
                 print(f'Error processing session: {e}')
     return features
