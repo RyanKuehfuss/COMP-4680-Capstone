@@ -1,15 +1,12 @@
 from scapy.all import *
-from scapy.layers.inet import IP, TCP, UDP, ICMP, Ether
+from scapy.layers.inet import IP, TCP, UDP, ICMP
 import time
 
 ipSender = ''
 ipReceiver = ''
 
-senderMAC = ''
-receiverMAC = ''
 
-
-# 0,tcp,http,S1,220,29200,0,normal
+# 0, tcp, http, S1, 220, 29200, 0, normal
 def TestCase1():
     # SYN
     packet1 = IP(src=ipSender, dst=ipReceiver) / TCP(sport=80, dport=80, flags='S') / Raw(b'\x00' * 110)
@@ -25,14 +22,14 @@ def TestCase1():
     send(packet3)
 
 
-# 0,tcp,http,REJ,0,0,0,anomaly
+# 0, tcp, http, REJ, 0, 0, 0, anomaly
 def TestCase2():
     packet = IP(src=ipReceiver, dst=ipSender) / TCP(sport=73, dport=73, flags='R', seq=800)
     
     send(packet,count=1)
 
 
-# 0,udp,private,SF,54,51,0,normal
+# 0, udp, private, SF, 54, 51, 0, normal
 def TestCase3():
     packet1 = IP(src=ipSender, dst=ipReceiver) / UDP(sport=73, dport=73) / Raw(b'\x00' * 54)
     packet2 = IP(src=ipReceiver, dst=ipSender) / UDP(sport=73, dport=73) / Raw(b'\x00' * 51)
@@ -41,7 +38,7 @@ def TestCase3():
     send(packet2,count=1)
 
 
-# 0,udp,private,SF,105,146,0,anomaly
+# 0, udp, private, SF, 105, 146, 0, anomaly
 def TestCase4():
     packet1 = IP(src=ipSender, dst=ipReceiver) / UDP(sport=73, dport=73) / Raw(b'\x00' * 105)
     packet2 = IP(src=ipReceiver, dst=ipSender) / UDP(sport=73, dport=73) / Raw(b'\x00' * 146)
@@ -50,14 +47,14 @@ def TestCase4():
     send(packet2,count=1)
 
 
-# 0,icmp,ecr_i,SF,30,0,0,normal
+# 0, icmp, ecr_i, SF, 30, 0, 0, normal
 def TestCase5():
     packet = IP(src=ipSender, dst=ipReceiver) / ICMP(type=0, code=0) / Raw(b'\x00' * 30)
     
     send(packet,count=1)
 
 
-# 0,icmp,ecr_i,SF,520,0,0,anomaly
+# 0, icmp, ecr_i, SF, 520, 0, 0, anomaly
 def TestCase6():
     packet = IP(src=ipSender, dst=ipReceiver) / ICMP(type=0, code=0) / Raw(b'\x00' * 520)
     
