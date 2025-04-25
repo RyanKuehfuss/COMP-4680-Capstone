@@ -86,8 +86,10 @@ def GetSRCBytes(packets: list)-> int:
     srcBytes = 0
     for packet in packets:
         if packet.haslayer(IP):
+            print(packet[IP].payload)
             if packet[IP].dst == myIp:
-                srcBytes += len(packet.payload)
+                if packet.haslayer(Raw):
+                    srcBytes += len(packet[Raw].load)
     return srcBytes
 
 
@@ -96,7 +98,8 @@ def GetDSTBytes(packets: list):
     for packet in packets:
         if packet.haslayer(IP):
             if packet[IP].src == myIp:
-                dstBytes += len(packet.payload)
+                if packet.haslayer(Raw):
+                    dstBytes += len(packet[Raw].load)
     return dstBytes
 
 
@@ -152,6 +155,8 @@ def GroupPackets(packets : list)-> dict:
     connections = {}
     packets = ReassembleFragments(packets)
 
+    #print(len(packets))
+
     for packetSet in packets:
         packet = packetSet[0]
         packetTime = packetSet[1]
@@ -178,6 +183,7 @@ def GroupPackets(packets : list)-> dict:
                 }
             connections[connectionKey]['packets'].append(packet)
             connections[connectionKey]['sessionDuration'] = packetTime - connections[connectionKey]['sessionStart']
+            #print(connections[connectionKey]["sessionDuration"])
         else:
             print('packet doesnt have ip?')
 
@@ -214,6 +220,9 @@ def ExtractFeatures(connections : dict)-> dict:
 
                     # Get if land attack
                     features[connection]['land'] = IsLandAttack(packets)
+
+                    print(features[connection])
+
             except Exception as e:
                 print(f'Error processing session: {e}')
     return features

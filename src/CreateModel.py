@@ -6,6 +6,8 @@ from sklearn.compose import ColumnTransformer
 from imblearn.pipeline import Pipeline
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from joblib import dump
+from sklearn.preprocessing import LabelEncoder
+import pandas as pd
 
 
 def ProcessCSVFile(csvFile):
@@ -13,7 +15,7 @@ def ProcessCSVFile(csvFile):
     df = pd.read_csv(csvFile)
 
     X = df.iloc[:, :-1].values
-    y = df.iloc[:, -1].values
+    y = df.iloc[:, -1].map({'anomaly': 1, 'normal': 0})
 
     return X, y
 
@@ -28,7 +30,7 @@ print('Finished Processing CSV File')
 
 columnsToEncode = [1, 2, 3]
 encoder = OneHotEncoder(handle_unknown='ignore', sparse_output=False)
-preprocessor = ColumnTransformer(transformers=[('cat', encoder, columnsToEncode)])
+preprocessor = ColumnTransformer(transformers=[('cat', encoder, columnsToEncode)], remainder="passthrough")
 
 
 gradientBoostingClassifier = HistGradientBoostingClassifier(

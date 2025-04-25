@@ -23,7 +23,7 @@ logging.info('Started Logging Successfully.')
 
 
 capturedPackets = []
-aggregationWindowTime = 10
+aggregationWindowTime = 15
 model = load('GradientBoostingFile.pkl')
 
 
@@ -47,7 +47,10 @@ def ClassifyTraffic(features : dict):
         for _, value in innerDict.items():
             featureList.append(value)
 
+        #print([featureList])
         prediction = model.predict([featureList])
+
+        print(prediction)
 
         if prediction == 1:
             print('Found Anomaly')
@@ -60,6 +63,8 @@ while True:
     CapturePackets()
 
     features = AggregateFeatures(capturedPackets)
+
+    #print(len(capturedPackets))
 
     if features:
         ClassifyTraffic(features)

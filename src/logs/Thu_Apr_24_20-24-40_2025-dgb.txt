@@ -1,0 +1,3 @@
+INFO: Started Logging Successfully.
+INFO: A Suspicious connection has been found: ('172.25.237.199', '192.168.0.201', 73, 73, 6) | PACKET INFORMATION : {'duration': 0.0, 'protocol_type': 'tcp', 'service': 'private', 'flag': 'REJ', 'src_bytes': 0, 'dst_bytes': 0, 'land': 0}
+INFO: A Suspicious connection has been found: ('172.25.237.199', '192.168.0.201', 73, 73, 6) | PACKET INFORMATION : {'duration': 0.0, 'protocol_type': 'tcp', 'service': 'private', 'flag': 'REJ', 'src_bytes': 0, 'dst_bytes': 0, 'land': 0}
