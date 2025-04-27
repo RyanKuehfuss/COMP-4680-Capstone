@@ -1,0 +1,6 @@
+imbalanced_learn==0.13.0
+imblearn==0.0
+joblib==1.4.2
+pandas==2.2.3
+scapy==2.6.1
+scikit_learn==1.6.1
